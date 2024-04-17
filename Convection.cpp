@@ -145,7 +145,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 
 vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order) 
 {
-	double emax = 1e-3,epsilon_max = 1;
+	double emax = 1e-6,epsilon_max = 1;
 	vector<vector<double>> error(n + 2*gc,vector<double>(n + 2*gc));
     vector<vector<double>> L_new(n + 2*gc,vector<double>(n + 2*gc));
     struct location
@@ -168,14 +168,12 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 	// }
   while (emax < epsilon_max){
 	
-	// for (int i = 0; i < n + gc; i++){
-	// L[i][0]    = y[i]*BC_L - L[i][1];
-	// L[i][n+gc] = 2.0*BC_R - L[i][n];
-	// // L[0][i]    = 2.0*BC_B;
-	// // L[n+gc][i] = 2.0*BC_T;
-	// L[0][i]    = dy * BC_B + L[1][i];
-	// L[n+gc][i] = dy * BC_T + L[n][i];
-	// }
+	for (int i = 0; i < n + gc; i++){
+	L[i][0]    =  -L[i][1];
+	L[i][n+gc] =  -L[i][n];
+	L[0][i]    =  -L[1][i];
+	L[n+gc][i] =  -L[n][i];
+	}
 
 	for (int i = 1; i < n+gc; i++) {
 		for (int j = 1; j < n+gc; j++) {
@@ -201,6 +199,7 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
             }
 		}
 	}
+	//cout << epsilon_max << endl;
     for (int j = 1; j < n + gc; j++) {
 		for (int i = 1; i < n + gc; i++) {
             L[i][j] = L_new[i][j];
@@ -411,12 +410,12 @@ int main(){
 		for ( i = 0; i < n + 2*gc; i++) {
 			
 			for (j = 0; j < n + 2*gc; j++){
-				// u[i][j] = sin(x[i])*sin(y[j]);
-				// v[i][j] = 0.1;
+				u[i][j] = 0.1*sin(x[j]);
+				v[i][j] = 0.1;
 				// u[i][j] = 4*pow(2.7182818,-(((x[i] - 3.14159)*(x[i] - 3.14159)) + ((y[j] - 3.14159)*(y[j] - 3.14159)))/2/0.5/0.5)/(2*3.14159*0.5*0.5);
 				// v[i][j] = 4*pow(2.7182818,-(((x[i] - 3.14159)*(x[i] - 3.14159)) + ((y[j] - 3.14159)*(y[j] - 3.14159)))/2/0.5/0.5)/(2*3.14159*0.5*0.5);
-				u[i][j] = sin(x[i]*x[i]*0.125 + y[j]*y[j]*0.125)+1;
-				v[i][j] = sin(x[i])*cos(y[j]);
+				// u[i][j] = sin(x[i]*x[i]*0.125 + y[j]*y[j]*0.125)+1;
+				// v[i][j] = sin(x[i])*cos(y[j]);
 				
 			}
 		} 
@@ -453,12 +452,17 @@ int main(){
 			d2v_d2x = DDxDDx(v,&dx,&gc,&n,order);
 			dvdy = DDy(v,&dy,&gc,&n,order);
 			d2v_d2y = DDyDDy(v,&dy,&gc,&n,order);
-			dp_dx = DDx(u,&dx,&gc,&n,order);
-			dp_dy = DDy(v,&dy,&gc,&n,order);
+
 				if(type == "burger"){
 
 					dt =  find_dt(u,v,dx,cfl,nu);
-					
+					B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
+					P = Poisson(P,B,dx,dy,gc,n,order);
+					dp_dx = DDx(P,&dx,&gc,&n,order);
+					dp_dy = DDy(P,&dy,&gc,&n,order);
+					P = fill_gc(P,gc,n);
+
+
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
 
@@ -476,10 +480,7 @@ int main(){
 			
 				u = fill_gc(u,gc,n);
 				v = fill_gc(v,gc,n);
-				P = fill_gc(P,gc,n);
-				B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
-				cout << "begin pressure" << endl;
-				P = Poisson(P,B,dx,dy,gc,n,order);
+
 
 				
 				for ( j = 0; j < n + 2*gc; j++){
@@ -496,7 +497,15 @@ int main(){
 						string s = to_string(time/0.01);
 						s.erase(s.find_last_not_of('0') + 1, s.length()-1);
    						s.erase(s.find_last_not_of('.') + 1, s.length()-1);
-						if (time < 10) {
+						if (k < 10) {
+							s.insert(0,1,'0');
+							s.insert(0,1,'0');
+							s.insert(0,1,'0');
+						}else if (k < 100){
+							s.insert(0,1,'0');
+							s.insert(0,1,'0');
+						}
+						else if (k < 1000){
 							s.insert(0,1,'0');
 						}
 						std::filesystem::current_path("DataU");

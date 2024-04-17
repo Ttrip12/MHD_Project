@@ -2,9 +2,9 @@ clear all
 close all
 
 axes = readmatrix('xy.csv');
-Files = dir('DataU');
+Files = dir('Pressure');
 num_files = length(Files);
-cd DataU\
+cd Pressure\
 data{:} = zeros(num_files-2);
 for i = 3:num_files
    file = Files(i).name;
@@ -12,7 +12,7 @@ for i = 3:num_files
 end
 cd ..
 %% Video
-v = VideoWriter('Spikes.mp4', 'MPEG-4');
+v = VideoWriter('Pressure.mp4', 'MPEG-4');
 v.FrameRate = 60;  % arbitrary
 open(v)
 f=figure;
@@ -26,7 +26,7 @@ for i=1:num_files - 2
     ylim([0 2*pi])
     yticks([0 pi 2*pi]);
     yticklabels({'0','\pi','2\pi'});
-    zlim([0 40]);
+    %zlim([0 40]);
     im = getframe(f);
     writeVideo(v,im)
 end
