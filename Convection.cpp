@@ -146,7 +146,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 
 vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order) 
 {
-	double emax = 1e-6,epsilon_max = 1;
+	double emax = 1e-4,epsilon_max = 1;
 	vector<vector<double>> error(n + 2*gc,vector<double>(n + 2*gc));
     vector<vector<double>> L_new(n + 2*gc,vector<double>(n + 2*gc));
     struct location
@@ -169,12 +169,12 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 	// }
   while (emax < epsilon_max){
 	
-	for (int i = 0; i < n + gc; i++){
-	L[i][0]    =  -L[i][1];
-	L[i][n+gc] =  -L[i][n];
-	L[0][i]    =  -L[1][i];
-	L[n+gc][i] =  -L[n][i];
-	}
+	// for (int i = 0; i < n + gc; i++){
+	// L[i][0]    =  -L[i][1];
+	// L[i][n+gc] =  -L[i][n];
+	// L[0][i]    =  -L[1][i];
+	// L[n+gc][i] =  -L[n][i];
+	// }
 
 	for (int i = 1; i < n+gc; i++) {
 		for (int j = 1; j < n+gc; j++) {

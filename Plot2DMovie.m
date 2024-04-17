@@ -2,9 +2,9 @@ clear all
 close all
 
 axes = readmatrix('xy.csv');
-Files = dir('Pressure');
+Files = dir('DataU');
 num_files = length(Files);
-cd Pressure\
+cd DataU\
 data{:} = zeros(num_files-2);
 for i = 3:num_files
    file = Files(i).name;
