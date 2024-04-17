@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <chrono>
 #define _USE_MATH_DEFINES
+#define M_PI  3.14159265
 using namespace std;
 std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
@@ -355,12 +356,7 @@ int main(){
 	input.open("Input.txt", ios::in);
 	string line;
 
-		//while (getline(input,line)) {
 		while (1){
-			// getline(input,line);
-			// if(line.find("#") == 0) {
-			// 	continue;
-			// }
 			input >> nodes_x;
 			input >> nodes_y;
 			input >> order;
@@ -478,13 +474,63 @@ int main(){
 					}
 				}					
 			
-				u = fill_gc(u,gc,n);
-				v = fill_gc(v,gc,n);
+
+				if(type == "MHD"){
+				vector<vector<double>> Bx(n + 2*gc,vector<double>(n + 2*gc)), Bxnew(n + 2*gc,vector<double>(n + 2*gc)),By(n + 2*gc,vector<double>(n + 2*gc)), Bynew(n + 2*gc,vector<double>(n + 2*gc));
+				vector<vector<double>> dBxdy(n + 2*gc,vector<double>(n + 2*gc)), dBxdx(n + 2*gc,vector<double>(n + 2*gc)),dBydx(n + 2*gc,vector<double>(n + 2*gc)), dBydy(n + 2*gc,vector<double>(n + 2*gc));
 
 
-				
-				for ( j = 0; j < n + 2*gc; j++){
+
+					dt =  find_dt(u,v,dx,cfl,nu);
+					B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
+					P = Poisson(P,B,dx,dy,gc,n,order);
+					dp_dx = DDx(P,&dx,&gc,&n,order);
+					dp_dy = DDy(P,&dy,&gc,&n,order);
+					P = fill_gc(P,gc,n);
+
+					dBxdx = DDx(Bx,&dx,&gc,&n,order);
+					dBydx = DDx(By,&dx,&gc,&n,order);
+					dBxdy = DDy(Bx,&dy,&gc,&n,order);
+					dBydy = DDy(By,&dy,&gc,&n,order);
+
+
+					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
+
+						unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) + (1/(4*M_PI))*By[i][j] * (dBydx[i][j] - dBxdy[i][j]) - dp_dx[i][j]/rho);
+
+						vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j]) + (1/(4*M_PI))*Bx[i][j] * (dBxdy[i][j] - dBydx[i][j]) - dp_dy[i][j]/rho);
+
+						u[i][j] = unew[i][j];
+
+						v[i][j] = vnew[i][j];
+						
+						}
+					}
+					
+					u = fill_gc(u,gc,n);
+					v = fill_gc(v,gc,n);
+					
+					for ( j = 0; j < n + 2*gc; j++){
+						for ( i = 0; i < n + 2*gc; i++){
+
+						Bxnew[i][j] = Bx[i][j] + dt*(-v[i][j]*dBxdy[i][j] - Bx[i][j]*dvdy[i][j] + u[i][j]*dBydy[i][j] + By[i][j]*dudy[i][j]);
+
+						Bynew[i][j] = By[i][j] + dt*(v[i][j]*dBxdx[i][j] + Bx[i][j]*dvdx[i][j] - u[i][j]*dBydx[i][j] - By[i][j]*dudx[i][j]);
+
+						Bx[i][j] = Bxnew[i][j];
+
+						By[i][j] = Bynew[i][j];
+						
+						}
+					}
+					Bx = fill_gc(Bx,gc,n);
+					By = fill_gc(By,gc,n);
+
+				}	
+
+				for ( j = 0; j < n + 2*gc; j++){
+					for ( i = 0; i < n + 2*gc; i++){
 
 						V_mag[i][j] = sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
 						
@@ -537,37 +583,7 @@ int main(){
 						time = time + snapshot_time;
 					}
 
-			
-			// if (iter%num == 0){         //Taking snapshots of runs
-				
-			// 	string s = to_string(k);   // Organizing files names so matlab can read them in order
-			// 	if (k < 10) {
-			// 		s.insert(0,1,'0');
-			// 		s.insert(0,1,'0');
-			// 		s.insert(0,1,'0');
-			// 	}else if (k < 100){
-			// 		s.insert(0,1,'0');
-			// 		s.insert(0,1,'0');
-			// 	}
-			// 	else if (k < 1000){
-			// 		s.insert(0,1,'0');
-			// 	}
-
-			// 	std::filesystem::current_path("Pressure");
-			// 	filename = "TimeP_";
-			// 	filename.append(s);
-			// 	filename.append("s.csv");
-			// 	create(filename,P,n + 2*gc);
-			// 	std::filesystem::current_path("..");
-				
-				
-				// filename = "Iter_";
-				// filename.append(s);
-				// filename.append(".csv");
-				// create(filename,P,n + 2*gc);
-				
-				//k = k + 1;
-		//	}
+		
 			
 		}
 
