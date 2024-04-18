@@ -348,7 +348,7 @@ void createxy(string file, vector<double> x, vector<double> y,int n)
 int main(){
 	
 	int nodes_x, nodes_y, order, gc, i,i_max,j,n,k;
-	double x_low,x_high,cfl,dt,dx,nu,y_low,y_high,dy,time_check = 0,time = 0,rho;
+	double x_low,x_high,cfl,dt,dx,nu,y_low,y_high,dy,time_check = 0,time = 0,rho,eta;
 	string type;
 	ifstream input;
 	// *** INPUTS ***
@@ -367,6 +367,7 @@ int main(){
 			input >> type;
 			input >> nu;
 			input >> rho;
+			input >> eta;
 			if (input.eof()){
 				break;
 			}
@@ -381,7 +382,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*50;                   // Total Number of Iterations
+	i_max = n*40;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -417,8 +418,8 @@ int main(){
 				// v[i][j] = sin(x[i])*cos(y[j]);
 				u[i][j] = -sin(y[i]);
 				v[i][j] =  sin(x[j]);
-				Bx[i][j] = -sin(y[i]);
-				By[i][j] = sin(2*x[j]);
+				Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[i]);
+				By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[j]);
 				
 			}
 		} 
@@ -489,7 +490,6 @@ int main(){
 					}
 				}					
 			
-
 				if(type == "Ideal_MHD"){
 
 
@@ -545,7 +545,6 @@ int main(){
 
 				}	
 
-
 				if(type == "MHD"){
 
 					P = fill_gc(P,gc,n);
@@ -585,9 +584,9 @@ int main(){
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
 
-						Bxnew[i][j] = Bx[i][j] + dt*(-v[i][j]*dBxdy[i][j] - Bx[i][j]*dvdy[i][j] + u[i][j]*dBydy[i][j] + By[i][j]*dudy[i][j] + 0.1 * (d2Bxd2x[i][j] + d2Bxd2y[i][j]));
+						Bxnew[i][j] = Bx[i][j] + dt*(-v[i][j]*dBxdy[i][j] - Bx[i][j]*dvdy[i][j] + u[i][j]*dBydy[i][j] + By[i][j]*dudy[i][j] + eta * (d2Bxd2x[i][j] + d2Bxd2y[i][j]));
 
-						Bynew[i][j] = By[i][j] + dt*(v[i][j]*dBxdx[i][j] + Bx[i][j]*dvdx[i][j] - u[i][j]*dBydx[i][j] - By[i][j]*dudx[i][j] + 0.1 * (d2Byd2x[i][j] + d2Byd2y[i][j]));
+						Bynew[i][j] = By[i][j] + dt*(v[i][j]*dBxdx[i][j] + Bx[i][j]*dvdx[i][j] - u[i][j]*dBydx[i][j] - By[i][j]*dudx[i][j] + eta * (d2Byd2x[i][j] + d2Byd2y[i][j]));
 
 						Bx[i][j] = Bxnew[i][j];
 
@@ -599,8 +598,6 @@ int main(){
 					By = fill_gc(By,gc,n);
 
 				}	
-
-
 
 				for ( j = 0; j < n + 2*gc; j++){
 					for ( i = 0; i < n + 2*gc; i++){

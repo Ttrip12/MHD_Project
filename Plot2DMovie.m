@@ -40,7 +40,7 @@ for i = 3:num_files
 end
 cd ..
 %% Video
-v = VideoWriter('2 Resistive B Field.mp4', 'MPEG-4');
+v = VideoWriter('3 Resistive B Field.mp4', 'MPEG-4');
 v.FrameRate = 30;  % arbitrary
 open(v)
 sc = 8;
