@@ -382,7 +382,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*20;                   // Total Number of Iterations
+	i_max = n*40;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -392,7 +392,10 @@ int main(){
 	vector<vector<double>> v(n + 2*gc,vector<double>(n + 2*gc)), vnew(n + 2*gc,vector<double>(n + 2*gc)), dvdx(n + 2*gc,vector<double>(n + 2*gc)), d2v_d2x(n + 2*gc,vector<double>(n + 2*gc)), dvdy(n + 2*gc,vector<double>(n + 2*gc)), d2v_d2y(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> B(n + 2*gc,vector<double>(n + 2*gc)), P(n + 2*gc,vector<double>(n + 2*gc)), dp_dx(n + 2*gc,vector<double>(n + 2*gc)), dp_dy(n + 2*gc,vector<double>(n + 2*gc));
 	vector<double> x(n + 2*gc),y(n + 2*gc);
-	// ***** Initial Conditions *****	
+	vector<vector<double>> Bx(n + 2*gc,vector<double>(n + 2*gc)), Bxnew(n + 2*gc,vector<double>(n + 2*gc)),By(n + 2*gc,vector<double>(n + 2*gc)), Bynew(n + 2*gc,vector<double>(n + 2*gc));
+	vector<vector<double>> dBxdy(n + 2*gc,vector<double>(n + 2*gc)), dBxdx(n + 2*gc,vector<double>(n + 2*gc)),dBydx(n + 2*gc,vector<double>(n + 2*gc)), dBydy(n + 2*gc,vector<double>(n + 2*gc));
+	vector<vector<double>> B_mag(n + 2*gc,vector<double>(n + 2*gc));
+		// ***** Initial Conditions *****	
 		/***** Grid *****/
 		for ( i = 0; i < n + 2*gc; i++) {
 			
@@ -402,16 +405,20 @@ int main(){
 
 			}
 		}
-		/***** Initial Velocity Field *****/
+		/***** Initial Velocity and B Field *****/
 		for ( i = 0; i < n + 2*gc; i++) {
 			
 			for (j = 0; j < n + 2*gc; j++){
-				u[i][j] = 0.1*sin(x[j]);
-				v[i][j] = 0.1;
+				// u[i][j] = sin(x[j]);
+				// v[i][j] = 1;
 				// u[i][j] = 4*pow(2.7182818,-(((x[i] - 3.14159)*(x[i] - 3.14159)) + ((y[j] - 3.14159)*(y[j] - 3.14159)))/2/0.5/0.5)/(2*3.14159*0.5*0.5);
 				// v[i][j] = 4*pow(2.7182818,-(((x[i] - 3.14159)*(x[i] - 3.14159)) + ((y[j] - 3.14159)*(y[j] - 3.14159)))/2/0.5/0.5)/(2*3.14159*0.5*0.5);
 				// u[i][j] = sin(x[i]*x[i]*0.125 + y[j]*y[j]*0.125)+1;
 				// v[i][j] = sin(x[i])*cos(y[j]);
+				u[i][j] = -sin(y[i]);
+				v[i][j] =  sin(x[j]);
+				Bx[i][j] = -sin(y[i]);
+				By[i][j] = sin(2*x[j]);
 				
 			}
 		} 
@@ -431,6 +438,14 @@ int main(){
 		std::filesystem::create_directory("DataMagnitude");
 		std::filesystem::remove_all("Pressure");
 		std::filesystem::create_directory("Pressure");
+		std::filesystem::remove_all("Bxcomponent");
+		std::filesystem::create_directory("Bxcomponent");
+		std::filesystem::remove_all("Bycomponent");
+		std::filesystem::create_directory("Bycomponent");
+		std::filesystem::remove_all("Bycomponent");
+		std::filesystem::create_directory("Bycomponent");
+		std::filesystem::remove_all("B_mag");
+		std::filesystem::create_directory("B_mag");
 		string filename;
 
 	// Solve
@@ -476,17 +491,15 @@ int main(){
 			
 
 				if(type == "MHD"){
-				vector<vector<double>> Bx(n + 2*gc,vector<double>(n + 2*gc)), Bxnew(n + 2*gc,vector<double>(n + 2*gc)),By(n + 2*gc,vector<double>(n + 2*gc)), Bynew(n + 2*gc,vector<double>(n + 2*gc));
-				vector<vector<double>> dBxdy(n + 2*gc,vector<double>(n + 2*gc)), dBxdx(n + 2*gc,vector<double>(n + 2*gc)),dBydx(n + 2*gc,vector<double>(n + 2*gc)), dBydy(n + 2*gc,vector<double>(n + 2*gc));
 
 
-
+					//P = fill_gc(P,gc,n);
 					dt =  find_dt(u,v,dx,cfl,nu);
-					B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
-					P = Poisson(P,B,dx,dy,gc,n,order);
-					dp_dx = DDx(P,&dx,&gc,&n,order);
-					dp_dy = DDy(P,&dy,&gc,&n,order);
-					P = fill_gc(P,gc,n);
+				//	B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
+					//P = Poisson(P,B,dx,dy,gc,n,order);
+					//dp_dx = DDx(P,&dx,&gc,&n,order);
+				//	dp_dy = DDy(P,&dy,&gc,&n,order);
+					
 
 					dBxdx = DDx(Bx,&dx,&gc,&n,order);
 					dBydx = DDx(By,&dx,&gc,&n,order);
@@ -497,9 +510,9 @@ int main(){
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
 
-						unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) + (1/(4*M_PI))*By[i][j] * (dBydx[i][j] - dBxdy[i][j]) - dp_dx[i][j]/rho);
+						unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) + (1/(4*M_PI))*By[i][j] * (dBydx[i][j] - dBxdy[i][j]));// - dp_dx[i][j]/rho);
 
-						vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j]) + (1/(4*M_PI))*Bx[i][j] * (dBxdy[i][j] - dBydx[i][j]) - dp_dy[i][j]/rho);
+						vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j]) + (1/(4*M_PI))*Bx[i][j] * (dBxdy[i][j] - dBydx[i][j]));// - dp_dy[i][j]/rho);
 
 						u[i][j] = unew[i][j];
 
@@ -533,7 +546,7 @@ int main(){
 					for ( i = 0; i < n + 2*gc; i++){
 
 						V_mag[i][j] = sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
-						
+						B_mag[i][j] = sqrt(Bx[i][j]*Bx[i][j] + By[i][j]*By[i][j]);
 						}
 					}
 			
@@ -560,25 +573,48 @@ int main(){
 						filename.append("s.csv");
 						create(filename,u,n + 2*gc);
 						std::filesystem::current_path("..");
+						
 						std::filesystem::current_path("DataV");
 						filename = "TimeV_";
 						filename.append(s);
 						filename.append("s.csv");
 						create(filename,v,n + 2*gc);
 						std::filesystem::current_path("..");
+						
 						std::filesystem::current_path("DataMagnitude");
 						filename = "TimeMag_";
 						filename.append(s);
 						filename.append("s.csv");
 						create(filename,V_mag,n + 2*gc);
 						std::filesystem::current_path("..");
+						
 						std::filesystem::current_path("Pressure");
 						filename = "TimeP_";
 						filename.append(s);
 						filename.append("s.csv");
 						create(filename,P,n + 2*gc);
 						std::filesystem::current_path("..");
-
+						
+						std::filesystem::current_path("Bxcomponent");
+						filename = "TimeBx_";
+						filename.append(s);
+						filename.append("s.csv");
+						create(filename,Bx,n + 2*gc);
+						std::filesystem::current_path("..");
+						
+						std::filesystem::current_path("Bycomponent");
+						filename = "TimeBy_";
+						filename.append(s);
+						filename.append("s.csv");
+						create(filename,By,n + 2*gc);
+						std::filesystem::current_path("..");
+						
+						std::filesystem::current_path("B_mag");
+						filename = "TimeB_";
+						filename.append(s);
+						filename.append("s.csv");
+						create(filename,B_mag,n + 2*gc);
+						std::filesystem::current_path("..");
 						k = k+1;
 						time = time + snapshot_time;
 					}
