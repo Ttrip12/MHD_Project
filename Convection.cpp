@@ -6,7 +6,6 @@
 #include <filesystem>
 #include <algorithm>
 #include <chrono>
-#define _USE_MATH_DEFINES
 #define M_PI  3.14159265
 using namespace std;
 std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
@@ -382,7 +381,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*40;                   // Total Number of Iterations
+	i_max = n*50;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -491,7 +490,7 @@ int main(){
 				}					
 			
 
-				if(type == "MHD"){
+				if(type == "Ideal_MHD"){
 
 
 					//P = fill_gc(P,gc,n);
@@ -545,6 +544,63 @@ int main(){
 					By = fill_gc(By,gc,n);
 
 				}	
+
+
+				if(type == "MHD"){
+
+					P = fill_gc(P,gc,n);
+					dt =  find_dt(u,v,dx,cfl,nu);
+					B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
+					P = Poisson(P,B,dx,dy,gc,n,order);
+					dp_dx = DDx(P,&dx,&gc,&n,order);
+					dp_dy = DDy(P,&dy,&gc,&n,order);
+					
+
+					dBxdx = DDx(Bx,&dx,&gc,&n,order);
+					dBydx = DDx(By,&dx,&gc,&n,order);
+					dBxdy = DDy(Bx,&dy,&gc,&n,order);
+					dBydy = DDy(By,&dy,&gc,&n,order);
+					d2Bxd2x = DDxDDx(Bx,&dx,&gc,&n,order);
+					d2Byd2x = DDxDDx(By,&dx,&gc,&n,order);
+					d2Bxd2y = DDyDDy(Bx,&dy,&gc,&n,order);
+					d2Byd2y = DDyDDy(By,&dy,&gc,&n,order);
+
+					for ( j = 0; j < n + 2*gc; j++){
+						for ( i = 0; i < n + 2*gc; i++){
+
+						unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) + (1/(4*M_PI))*By[i][j] * (dBydx[i][j] - dBxdy[i][j]) - dp_dx[i][j]/rho);
+
+						vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j]) + (1/(4*M_PI))*Bx[i][j] * (dBxdy[i][j] - dBydx[i][j]) - dp_dy[i][j]/rho);
+
+						u[i][j] = unew[i][j];
+
+						v[i][j] = vnew[i][j];
+						
+						}
+					}
+					
+					u = fill_gc(u,gc,n);
+					v = fill_gc(v,gc,n);
+					
+					for ( j = 0; j < n + 2*gc; j++){
+						for ( i = 0; i < n + 2*gc; i++){
+
+						Bxnew[i][j] = Bx[i][j] + dt*(-v[i][j]*dBxdy[i][j] - Bx[i][j]*dvdy[i][j] + u[i][j]*dBydy[i][j] + By[i][j]*dudy[i][j] + 0.1 * (d2Bxd2x[i][j] + d2Bxd2y[i][j]));
+
+						Bynew[i][j] = By[i][j] + dt*(v[i][j]*dBxdx[i][j] + Bx[i][j]*dvdx[i][j] - u[i][j]*dBydx[i][j] - By[i][j]*dudx[i][j] + 0.1 * (d2Byd2x[i][j] + d2Byd2y[i][j]));
+
+						Bx[i][j] = Bxnew[i][j];
+
+						By[i][j] = Bynew[i][j];
+						
+						}
+					}
+					Bx = fill_gc(Bx,gc,n);
+					By = fill_gc(By,gc,n);
+
+				}	
+
+
 
 				for ( j = 0; j < n + 2*gc; j++){
 					for ( i = 0; i < n + 2*gc; i++){

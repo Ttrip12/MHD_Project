@@ -40,17 +40,17 @@ for i = 3:num_files
 end
 cd ..
 %% Video
-v = VideoWriter('BField and Velocity.mp4', 'MPEG-4');
+v = VideoWriter('2 Resistive B Field.mp4', 'MPEG-4');
 v.FrameRate = 30;  % arbitrary
 open(v)
 sc = 8;
 f=figure;
 pause(0.2) % let plot wake up
 for i=1:num_files - 2
-    s = pcolor(axes(:,1),axes(:,2),data{i});
+    s = pcolor(axes(:,1),axes(:,2),dataB{i});
     s.EdgeColor = 'none';
     c = colorbar;
-    c.Label.String = 'Velocity Magnitude';
+    c.Label.String = 'Field Strength';
     hold on
     [C,h] = contour(axes(:,1),axes(:,2),dataB{i},10);
     h.EdgeColor = 'k';
