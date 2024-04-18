@@ -394,6 +394,7 @@ int main(){
 	vector<double> x(n + 2*gc),y(n + 2*gc);
 	vector<vector<double>> Bx(n + 2*gc,vector<double>(n + 2*gc)), Bxnew(n + 2*gc,vector<double>(n + 2*gc)),By(n + 2*gc,vector<double>(n + 2*gc)), Bynew(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> dBxdy(n + 2*gc,vector<double>(n + 2*gc)), dBxdx(n + 2*gc,vector<double>(n + 2*gc)),dBydx(n + 2*gc,vector<double>(n + 2*gc)), dBydy(n + 2*gc,vector<double>(n + 2*gc));
+	vector<vector<double>> d2Bxd2y(n + 2*gc,vector<double>(n + 2*gc)), d2Bxd2x(n + 2*gc,vector<double>(n + 2*gc)),d2Byd2x(n + 2*gc,vector<double>(n + 2*gc)), d2Byd2y(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> B_mag(n + 2*gc,vector<double>(n + 2*gc));
 		// ***** Initial Conditions *****	
 		/***** Grid *****/
@@ -505,7 +506,10 @@ int main(){
 					dBydx = DDx(By,&dx,&gc,&n,order);
 					dBxdy = DDy(Bx,&dy,&gc,&n,order);
 					dBydy = DDy(By,&dy,&gc,&n,order);
-
+					d2Bxd2x = DDxDDx(Bx,&dx,&gc,&n,order);
+					d2Byd2x = DDxDDx(By,&dx,&gc,&n,order);
+					d2Bxd2y = DDyDDy(Bx,&dy,&gc,&n,order);
+					d2Byd2y = DDyDDy(By,&dy,&gc,&n,order);
 
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
