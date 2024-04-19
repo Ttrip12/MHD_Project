@@ -39,20 +39,31 @@ for i = 3:num_files
    dataB{i-2} = readmatrix(fileB);
 end
 cd ..
+
+FilesVort = dir('Vorticity');
+cd Vorticity\
+dataVort{:} = zeros(num_files-2);
+
+for i = 3:num_files
+   fileVort = FilesVort(i).name;
+   dataVort{i-2} = readmatrix(fileVort);
+end
+cd ..
+
 %% Video
-v = VideoWriter('3 Resistive B Field.mp4', 'MPEG-4');
+v = VideoWriter('Vorticity with B lines.mp4', 'MPEG-4');
 v.FrameRate = 30;  % arbitrary
 open(v)
 sc = 8;
 f=figure;
 pause(0.2) % let plot wake up
 for i=1:num_files - 2
-    s = pcolor(axes(:,1),axes(:,2),dataB{i});
+    s = pcolor(axes(:,1),axes(:,2),dataVort{i});
     s.EdgeColor = 'none';
     c = colorbar;
-    c.Label.String = 'Field Strength';
+    c.Label.String = 'Vorticity';
     hold on
-    [C,h] = contour(axes(:,1),axes(:,2),dataB{i},10);
+    [C,h] = contour(axes(:,1),axes(:,2),dataVort{i},30);
     h.EdgeColor = 'k';
    
     %quiver(axes(1:sc:end,1),axes(1:sc:end,2),dataV{i}(1:sc:end,1:sc:end),dataU{i}(1:sc:end,1:sc:end),'Color','k');
