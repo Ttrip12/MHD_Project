@@ -65,19 +65,20 @@ end
 cd ..
 
 %% Video
-v = VideoWriter('BField Resistive', 'MPEG-4');
+v = VideoWriter('Vorticity Resistive with pressure', 'MPEG-4');
 v.FrameRate = 30;  % arbitrary
 open(v)
 sc = 8;
 f=figure;
 pause(0.2) % let plot wake up
 for i=1:num_files - 2
-    s = pcolor(axes(:,1),axes(:,2),dataB{i});
+    s = pcolor(axes(:,1),axes(:,2),dataVort{i});
     s.EdgeColor = 'none';
     c = colorbar;
+    caxis([0 1.5]);
     c.Label.String = 'B-Field Intensity';
     hold on
-    [C,h] = contour(axes(:,1),axes(:,2),dataB{i},30);
+    [C,h] = contour(axes(:,1),axes(:,2),dataVort{i},30);
     h.EdgeColor = 'k';
    
     %quiver(axes(1:sc:end,1),axes(1:sc:end,2),dataV{i}(1:sc:end,1:sc:end),dataU{i}(1:sc:end,1:sc:end),'Color','k');

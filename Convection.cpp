@@ -147,7 +147,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 
 vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order) 
 {
-	double emax = 1e-4,epsilon_max = 1;
+	double emax = 1e-4,epsilon_max = 1,Lmax;
 	vector<vector<double>> error(n + 2*gc,vector<double>(n + 2*gc));
     vector<vector<double>> L_new(n + 2*gc,vector<double>(n + 2*gc));
     struct location
@@ -155,11 +155,6 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		int x,y;
 	};
     location lL;
-	double BC_L,BC_R,BC_T,BC_B;
-	BC_L = 1.0;
-	BC_R = 0.0;
-	BC_T = 0.0;
-	BC_B = 0.0;
 
 	
 	// for (int i = 0; i < n+gc; i++){
@@ -183,9 +178,22 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		}
 	}
 
+   	for(int i = 1; i < n + gc; i++){
+        for(int j = 1; j < n + gc; j++){
+			if(Lmax < L_new[i][j])
+            {
+				Lmax = L_new[i][j];
+                lL.x = i + 1;
+                lL.y = j + 1;
+            }
+		}
+	}
+
+
+
 	for (int i = gc; i < n + gc; i++){
 		for (int j = gc; j < n + gc; j++){
-			error[i][j] = abs(L_new[i][j] - L[i][j]);
+			error[i][j] = abs(L_new[i][j] - L[i][j])/Lmax;
 		}
 	}
 
@@ -208,7 +216,6 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 
 		}
 	}
-	
 }	
 	return L;
 
@@ -583,9 +590,9 @@ int main(){
 
 					
 					dt =  find_dt(u,v,dx,cfl,nu);
-					// B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
-					// P = Poisson(P,B,dx,dy,gc,n,order);
-					// P = fill_gc(P,gc,n);
+					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
+					P = Poisson(P,B,dx,dy,gc,n,order);
+					P = fill_gc(P,gc,n);
 					dp_dx = DDx(P,&dx,&gc,&n,order);
 					dp_dy = DDy(P,&dy,&gc,&n,order);
 					dBxdx = DDx(Bx,&dx,&gc,&n,order);
