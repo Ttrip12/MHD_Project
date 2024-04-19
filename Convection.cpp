@@ -14,8 +14,8 @@ vector<vector<double>> DDx(vector<vector<double>> A, double* dx,int* gc,int* n,i
     vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int j = 1; j < *n + 2 * *gc; j++){
-				for (int i = 1; i < *n + 2 * *gc; i++) {
+			for (int j = 1; j < *n + *gc; j++){
+				for (int i = 1; i < *n + *gc; i++) {
 				derivative[i][j] = (A[i][j+1] - A[i][j-1])/2.0/ *dx;
 				} 
 			}
@@ -47,8 +47,8 @@ vector<vector<double>> DDy(vector<vector<double>> A, double* dy,int* gc,int* n,i
     vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int i = 1; i < *n + 2 * *gc - 1; i++){
-				for (int j = 1; j < *n + 2 * *gc - 1; j++) {
+			for (int i = 1; i < *n + *gc ; i++){
+				for (int j = 1; j < *n + *gc ; j++) {
 				derivative[i][j] = (A[i+1][j] - A[i-1][j])/2.0/ *dy;
 				} 
 			}
@@ -80,8 +80,8 @@ vector<vector<double>> DDxDDx(vector<vector<double>> A, double* dx,int* gc,int* 
     vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int j = 1; j < *n + 2 * *gc; j++) {
-				for (int i = 1; i < *n + 2 * *gc - 1; i++) {
+			for (int j = 1; j < *n + *gc; j++) {
+				for (int i = 1; i < *n + *gc; i++) {
 
 				derivative[i][j] = (A[i][j+1] -2*A[i][j] + A[i][j-1])/ *dx/ *dx;
 				
@@ -114,8 +114,8 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
   	vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int i = *gc; i < *n + 2 * *gc - 1; i++) {
-				for (int j = *gc; j < *n + 2 * *gc; j++) {
+			for (int i = *gc; i < *n + *gc; i++) {
+				for (int j = *gc; j < *n + *gc; j++) {
 
 				derivative[i][j] = (A[i+1][j] -2*A[i][j] + A[i-1][j])/ *dy/ *dy;
 				
@@ -200,8 +200,8 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		}
 	}
 	//cout << epsilon_max << endl;
-    for (int j = 1; j < n + gc; j++) {
-		for (int i = 1; i < n + gc; i++) {
+    for (int j = 0; j < n + gc; j++) {
+		for (int i = 0; i < n + gc; i++) {
             L[i][j] = L_new[i][j];
 
 		}
@@ -335,13 +335,13 @@ void create(string file, vector<vector<double>> A,int n)
   
     int i,j;
 	// Read the input 
-    for (i = 0; i < n; ++i)
+    for (i = 1; i < n-1; ++i)
     {
-        for (j = 0; j < n; ++j)
-            if (j < (n - 1)) {
+        for (j = 1; j < n -1; ++j)
+            if (j < (n - 2)) {
                 fout << A[i][j] << ",";
             }
-            else if (j == (n - 1)) {
+            else if (j == (n - 2)) {
                 fout << A[i][j] << "\n";
             }
     }
@@ -362,7 +362,7 @@ void createxy(string file, vector<double> x, vector<double> y,int n)
     int i;
   
     // Read the input 
-    for (i = 0; i < n; i++) { 
+    for (i = 1; i < n-1; i++) { 
   
         fout << x[i] << ", "
             << y[i] << ", "
@@ -408,7 +408,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*20;                   // Total Number of Iterations
+	i_max = n*10;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -423,7 +423,7 @@ int main(){
 	vector<vector<double>> d2Bxd2y(n + 2*gc,vector<double>(n + 2*gc)), d2Bxd2x(n + 2*gc,vector<double>(n + 2*gc)),d2Byd2x(n + 2*gc,vector<double>(n + 2*gc)), d2Byd2y(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> B_mag(n + 2*gc,vector<double>(n + 2*gc)),B_residual(n + 2*gc,vector<double>(n + 2*gc)),Phi(n + 2*gc,vector<double>(n + 2*gc)),dPhidy(n + 2*gc,vector<double>(n + 2*gc)), dPhidx(n + 2*gc,vector<double>(n + 2*gc)),Vorticity(n + 2*gc,vector<double>(n + 2*gc));
 		// ***** Initial Conditions *****	
-		/***** Grid *****/
+		 /***** Grid *****/
 		for ( i = 0; i < n + 2*gc; i++) {
 			
 			for (j = 0; j < n + 2*gc; j++){
@@ -443,7 +443,7 @@ int main(){
 				// u[i][j] = sin(x[i]*x[i]*0.125 + y[j]*y[j]*0.125)+1;
 				// v[i][j] = sin(x[i])*cos(y[j]);
 				u[i][j] = -sin(y[i]);
-				v[i][j] =  sin(x[j]);
+				v[i][j] =  sin(2*x[j]);
 				// Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[i]);
 				// By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[j]);
 				Bx[i][j] = 0.0;
@@ -577,10 +577,11 @@ int main(){
 
 				if(type == "MHD"){
 
-					P = fill_gc(P,gc,n);
+					
 					dt =  find_dt(u,v,dx,cfl,nu);
 					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
 					P = Poisson(P,B,dx,dy,gc,n,order);
+					P = fill_gc(P,gc,n);
 					dp_dx = DDx(P,&dx,&gc,&n,order);
 					dp_dy = DDy(P,&dy,&gc,&n,order);
 					dBxdx = DDx(Bx,&dx,&gc,&n,order);
@@ -629,6 +630,7 @@ int main(){
 					dPhidx = DDx(Phi,&dx,&gc,&n,order);
 					dPhidy = DDy(Phi,&dy,&gc,&n,order);
 					
+					
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
 							Bx[i][j] = Bx[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
@@ -647,8 +649,6 @@ int main(){
 						B_mag[i][j] = sqrt(Bx[i][j]*Bx[i][j] + By[i][j]*By[i][j]);
 						}
 					}
-					Vorticity = fill_gc(Vorticity,gc,n);
-					Vorticity = fill_corners(Vorticity,gc,n);
 					time_check = time_check + dt;
 					if (time_check >= time){
 						cout << time_check << endl;
@@ -725,7 +725,11 @@ int main(){
 						k = k+1;
 						time = time + snapshot_time;
 					}
-
+					for ( j = 0; j < n + 2*gc; j++){
+						for ( i = 0; i < n + 2*gc; i++){
+							P[i][j] = 0.0;
+						}
+					}
 		
 			
 		}

@@ -23,10 +23,8 @@ for i = 3:num_files
 end
 %num_files = length(FilesU);
 cd ..
-%FilesV = dir('Bycomponent');
-FilesV = dir('DataV');
-cd DataV\
-%cd Bycomponent\
+FilesV = dir('Bycomponent');
+cd Bycomponent\
 dataV{:} = zeros(num_files-2);
 
 for i = 3:num_files
@@ -72,7 +70,7 @@ sc = 8;
 f=figure;
 pause(0.2) % let plot wake up
 for i=1:num_files - 2
-    s = pcolor(axes(:,1),axes(:,2),data{i});
+    s = pcolor(axes(:,1),axes(:,2),dataVort{i});
     s.EdgeColor = 'none';
     c = colorbar;
     c.Label.String = 'Pressure';
