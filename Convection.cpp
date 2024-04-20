@@ -146,6 +146,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order) 
 {
 	double emax = 1e-4,epsilon_max = 1;
+	int iter;
 	vector<vector<double>> error(n + 2*gc,vector<double>(n + 2*gc));
     vector<vector<double>> L_new(n + 2*gc,vector<double>(n + 2*gc));
     struct location
@@ -207,6 +208,14 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		}
 	}
 	
+	iter = iter + 1;
+	if (iter > 10000){
+		epsilon_max = 0;
+		cout << "Warning: Pressure not converged!" << endl;
+	}
+
+	
+
 }	
 	return L;
 
@@ -296,8 +305,8 @@ double find_dt(vector<vector<double>> u,vector<vector<double>> v,double dx,doubl
                 lu.y = j + 1;
             }
 	
-		for(int i = 0; i < 102; i++)
-        for(int j = 0; j< 102; j++)
+		for(int i = 0; i < u[0].size(); i++)
+        for(int j = 0; j< v[0].size(); j++)
             if(v_max < v[i][j])
             {
                 v_max = v[i][j];
@@ -323,6 +332,35 @@ double find_dt(vector<vector<double>> u,vector<vector<double>> v,double dx,doubl
 	return dt;
 }
 
+vector<vector<double>> getMagnitude(vector<vector<double>> X, vector<vector<double>> Y){
+	vector<vector<double>> Magnitude(X.size(),vector<double>(X[0].size()));
+	
+	for ( int j = 0; j < X.size(); j++){
+		for ( int i = 0; i < X[j].size(); i++){
+		
+		Magnitude[i][j] = sqrt(X[i][j]*X[i][j] + Y[i][j]*Y[i][j]);
+						
+		}
+	}
+	return Magnitude;
+}
+
+vector<vector<double>> getCurl2D(vector<vector<double>> X, vector<vector<double>> Y,double* dy,double* dx,int* gc,int* n,int order){
+	vector<vector<double>> Curl(X.size(),vector<double>(X[0].size()));
+	vector<vector<double>> dYdx = DDx(Y,dx,gc,n,order);
+	vector<vector<double>> dXdy = DDy(X,dy,gc,n,order);
+
+
+	for ( int j = 0; j < X.size(); j++){
+		for ( int i = 0; i < X[j].size(); i++){
+		
+		Curl[i][j] = dYdx[i][j] - dXdy[i][j];
+						
+		}
+	}
+	return Curl;
+}
+
 void create(string file, vector<vector<double>> A,int n) 
 { 
 
@@ -335,13 +373,13 @@ void create(string file, vector<vector<double>> A,int n)
   
     int i,j;
 	// Read the input 
-    for (i = 0; i < n; ++i)
+    for (i = 1; i < n - 1; ++i)
     {
-        for (j = 0; j < n; ++j)
-            if (j < (n - 1)) {
+        for (j = 1; j < n - 1; ++j)
+            if (j < (n - 2)) {
                 fout << A[i][j] << ",";
             }
-            else if (j == (n - 1)) {
+            else if (j == (n - 2)) {
                 fout << A[i][j] << "\n";
             }
     }
@@ -362,7 +400,7 @@ void createxy(string file, vector<double> x, vector<double> y,int n)
     int i;
   
     // Read the input 
-    for (i = 0; i < n; i++) { 
+    for (i = 1; i < n-1; i++) { 
   
         fout << x[i] << ", "
             << y[i] << ", "
@@ -408,7 +446,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*20;                   // Total Number of Iterations
+	i_max = n*10;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -421,7 +459,7 @@ int main(){
 	vector<vector<double>> Bx(n + 2*gc,vector<double>(n + 2*gc)), Bxnew(n + 2*gc,vector<double>(n + 2*gc)),By(n + 2*gc,vector<double>(n + 2*gc)), Bynew(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> dBxdy(n + 2*gc,vector<double>(n + 2*gc)), dBxdx(n + 2*gc,vector<double>(n + 2*gc)),dBydx(n + 2*gc,vector<double>(n + 2*gc)), dBydy(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> d2Bxd2y(n + 2*gc,vector<double>(n + 2*gc)), d2Bxd2x(n + 2*gc,vector<double>(n + 2*gc)),d2Byd2x(n + 2*gc,vector<double>(n + 2*gc)), d2Byd2y(n + 2*gc,vector<double>(n + 2*gc));
-	vector<vector<double>> B_mag(n + 2*gc,vector<double>(n + 2*gc)),B_residual(n + 2*gc,vector<double>(n + 2*gc)),Phi(n + 2*gc,vector<double>(n + 2*gc)),dPhidy(n + 2*gc,vector<double>(n + 2*gc)), dPhidx(n + 2*gc,vector<double>(n + 2*gc)),Vorticity(n + 2*gc,vector<double>(n + 2*gc));
+	vector<vector<double>> B_mag(n + 2*gc,vector<double>(n + 2*gc)),B_residual(n + 2*gc,vector<double>(n + 2*gc)),Phi(n + 2*gc,vector<double>(n + 2*gc)),dPhidy(n + 2*gc,vector<double>(n + 2*gc)), dPhidx(n + 2*gc,vector<double>(n + 2*gc)),Vorticity(n + 2*gc,vector<double>(n + 2*gc)),CurrentDensity(n + 2*gc,vector<double>(n + 2*gc));
 		// ***** Initial Conditions *****	
 		/***** Grid *****/
 		for ( i = 0; i < n + 2*gc; i++) {
@@ -444,10 +482,10 @@ int main(){
 				// v[i][j] = sin(x[i])*cos(y[j]);
 				u[i][j] = -sin(y[i]);
 				v[i][j] =  sin(x[j]);
-				// Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[i]);
-				// By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[j]);
-				Bx[i][j] = 0.0;
-				By[i][j] = 0.0;
+				Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[i]);
+				By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[j]);
+				// Bx[i][j] = 0.0;
+				// By[i][j] = 0.0;
 				
 			}
 		} 
@@ -477,11 +515,15 @@ int main(){
 		std::filesystem::create_directory("B_mag");
 		std::filesystem::remove_all("Vorticity");
 		std::filesystem::create_directory("Vorticity");
+		std::filesystem::remove_all("CurrentDensity");
+		std::filesystem::create_directory("CurrentDensity");
+		std::filesystem::remove_all("Bresidual");
+		std::filesystem::create_directory("Bresidual");
 		string filename;
 
 	// Solve
 		k = 0;
-		double snapshot_time = 0.01;
+		double snapshot_time = 0.1;
 		//int num = i_max/1000;
 		vector<vector<double>> V_mag(n + 2*gc,vector<double>(n + 2*gc));
 		for (int iter = 0; iter < i_max; iter++){
@@ -494,91 +536,12 @@ int main(){
 			d2v_d2x = DDxDDx(v,&dx,&gc,&n,order);
 			dvdy = DDy(v,&dy,&gc,&n,order);
 			d2v_d2y = DDyDDy(v,&dy,&gc,&n,order);
-
-				if(type == "burger"){
-
-					dt =  find_dt(u,v,dx,cfl,nu);
-					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
-					P = Poisson(P,B,dx,dy,gc,n,order);
-					dp_dx = DDx(P,&dx,&gc,&n,order);
-					dp_dy = DDy(P,&dy,&gc,&n,order);
-					P = fill_gc(P,gc,n);
-
-
-					for ( j = 0; j < n + 2*gc; j++){
-						for ( i = 0; i < n + 2*gc; i++){
-
-						unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) - dp_dx[i][j]/rho);
-
-						vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j]) - dp_dy[i][j]/rho);
-
-						u[i][j] = unew[i][j];
-
-						v[i][j] = vnew[i][j];
-						
-						}
-					}
-				}					
-			
-				if(type == "Ideal_MHD"){
-
-
-					//P = fill_gc(P,gc,n);
-					dt =  find_dt(u,v,dx,cfl,nu);
-				//	B = PoissonResidual(u,v,rho,dx,dy,gc,n,order);
-					//P = Poisson(P,B,dx,dy,gc,n,order);
-					//dp_dx = DDx(P,&dx,&gc,&n,order);
-				//	dp_dy = DDy(P,&dy,&gc,&n,order);
-					
-
-					dBxdx = DDx(Bx,&dx,&gc,&n,order);
-					dBydx = DDx(By,&dx,&gc,&n,order);
-					dBxdy = DDy(Bx,&dy,&gc,&n,order);
-					dBydy = DDy(By,&dy,&gc,&n,order);
-					d2Bxd2x = DDxDDx(Bx,&dx,&gc,&n,order);
-					d2Byd2x = DDxDDx(By,&dx,&gc,&n,order);
-					d2Bxd2y = DDyDDy(Bx,&dy,&gc,&n,order);
-					d2Byd2y = DDyDDy(By,&dy,&gc,&n,order);
-
-					for ( j = 0; j < n + 2*gc; j++){
-						for ( i = 0; i < n + 2*gc; i++){
-
-						unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) + (1/(4*M_PI))*By[i][j] * (dBydx[i][j] - dBxdy[i][j]));// - dp_dx[i][j]/rho);
-
-						vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j]) + (1/(4*M_PI))*Bx[i][j] * (dBxdy[i][j] - dBydx[i][j]));// - dp_dy[i][j]/rho);
-
-						u[i][j] = unew[i][j];
-
-						v[i][j] = vnew[i][j];
-						
-						}
-					}
-					
-					u = fill_gc(u,gc,n);
-					v = fill_gc(v,gc,n);
-					
-					for ( j = 0; j < n + 2*gc; j++){
-						for ( i = 0; i < n + 2*gc; i++){
-
-						Bxnew[i][j] = Bx[i][j] + dt*(-v[i][j]*dBxdy[i][j] - Bx[i][j]*dvdy[i][j] + u[i][j]*dBydy[i][j] + By[i][j]*dudy[i][j]);
-
-						Bynew[i][j] = By[i][j] + dt*(v[i][j]*dBxdx[i][j] + Bx[i][j]*dvdx[i][j] - u[i][j]*dBydx[i][j] - By[i][j]*dudx[i][j]);
-
-						Bx[i][j] = Bxnew[i][j];
-
-						By[i][j] = Bynew[i][j];
-						
-						}
-					}
-					Bx = fill_gc(Bx,gc,n);
-					By = fill_gc(By,gc,n);
-
-				}	
-
-				if(type == "MHD"){
+		
+		if(type == "MHD"){
 
 					P = fill_gc(P,gc,n);
 					dt =  find_dt(u,v,dx,cfl,nu);
+					cout << dt << endl;
 					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
 					P = Poisson(P,B,dx,dy,gc,n,order);
 					dp_dx = DDx(P,&dx,&gc,&n,order);
@@ -622,37 +585,34 @@ int main(){
 						
 						}
 					}
-					Bx = fill_gc(Bx,gc,n);
-					By = fill_gc(By,gc,n);
-					B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
-					Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order);
-					dPhidx = DDx(Phi,&dx,&gc,&n,order);
-					dPhidy = DDy(Phi,&dy,&gc,&n,order);
-					
-					for ( j = 0; j < n + 2*gc; j++){
-						for ( i = 0; i < n + 2*gc; i++){
-							Bx[i][j] = Bx[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
-							By[i][j] = By[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
-						}
-					}
+					// Bx = fill_gc(Bx,gc,n);
+					// By = fill_gc(By,gc,n);
+					// B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
+					// Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order);
+					// dPhidx = DDx(Phi,&dx,&gc,&n,order);
+					// dPhidy = DDy(Phi,&dy,&gc,&n,order);
+					// for ( j = 0; j < n + 2*gc; j++){
+					// 	for ( i = 0; i < n + 2*gc; i++){
+					// 		Bx[i][j] = Bx[i][j] -  (dPhidx[i][j]);
+					// 		By[i][j] = By[i][j] -  (dPhidy[i][j]);
+					// 	}
+					// }
 					Bx = fill_gc(Bx,gc,n);
 					By = fill_gc(By,gc,n);
 
 				}	
 
-				for ( j = 0; j < n + 2*gc; j++){
-					for ( i = 0; i < n + 2*gc; i++){
-						Vorticity[i][j] = (dvdx[i][j] - dudy[i][j]);
-						V_mag[i][j] = sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
-						B_mag[i][j] = sqrt(Bx[i][j]*Bx[i][j] + By[i][j]*By[i][j]);
-						}
-					}
+				V_mag = getMagnitude(u,v);
+				B_mag = getMagnitude(Bx,By);
+				Vorticity = getCurl2D(u,v,&dx,&dy,&gc,&n,order);
+				CurrentDensity = getCurl2D(Bx,By,&dx,&dy,&gc,&n,order);
+
 					Vorticity = fill_gc(Vorticity,gc,n);
 					Vorticity = fill_corners(Vorticity,gc,n);
 					time_check = time_check + dt;
 					if (time_check >= time){
 						cout << time_check << endl;
-						string s = to_string(time/0.01);
+						string s = to_string(time/0.1);
 						s.erase(s.find_last_not_of('0') + 1, s.length()-1);
    						s.erase(s.find_last_not_of('.') + 1, s.length()-1);
 						if (k < 10) {
@@ -722,12 +682,25 @@ int main(){
 						create(filename,Vorticity,n + 2*gc);
 						std::filesystem::current_path("..");
 
+						std::filesystem::current_path("CurrentDensity");
+						filename = "TimeCD_";
+						filename.append(s);
+						filename.append("s.csv");
+						create(filename,CurrentDensity,n + 2*gc);
+						std::filesystem::current_path("..");
+
+						std::filesystem::current_path("Bresidual");
+						filename = "TimeBres_";
+						filename.append(s);
+						filename.append("s.csv");
+						create(filename,B_residual,n + 2*gc);
+						std::filesystem::current_path("..");
+
 						k = k+1;
 						time = time + snapshot_time;
 					}
 
 		
-			
 		}
 
 		std::filesystem::current_path("..");

@@ -78,20 +78,18 @@ end
 %% Plots
 
 %Plot_Data(num_files,dataB)
-Plot_Data(num_files,dataCurr,axes,'Current Density','CurrentDensity_Plots')
+Plot_Data(num_files,dataCurr,axes,'Current Density')
 %%
-Plot_Data(num_files,dataVort,axes,'Vorticity','Vorticity_Plots')
+Plot_Data(num_files,dataVort,axes,'Vortixity')
 %%
-Plot_Data(num_files,dataB,axes,'B-field Intensity','Bfield_Plots')
+Plot_Data(num_files,dataB,axes,'B-field Intensity')
 %%
-function [] = Plot_Data(num_files,data,axes,colormap,foldername)
-
-cd(foldername)
-
+function [] = Plot_Data(num_files,data,axes,colormap)
+cd Figures
 for i=1:num_files - 2
     f = figure(i);
-    plotname = "Ideal MHD Nu = 0.05 Time = " + 0.1*(i - 1) + " s";
-    fname = "Time_0_" + 1*(i - 1) + "_2D_Sine_different_n_0_05";
+    plotname = "Ideal MHD Nu = 0.05 Time = 0_" + 1*(i - 1) + " s";
+    fname = 0.1*(i - 1) + "_2D_Sine_different_n_0_05";
     s = pcolor(axes(:,1),axes(:,2),data{i});
     s.EdgeColor = 'none';
     c = colorbar;
