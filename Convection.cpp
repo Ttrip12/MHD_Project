@@ -10,13 +10,15 @@
 using namespace std;
 std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
-vector<vector<double>> DDx(vector<vector<double>> A, double* dx,int* gc,int* n,int order){
+vector<vector<double>> DDx(vector<vector<double>> A, double* dx,int* gc,int* n,int order)
+
+{
     vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int j = 1; j < *n + 2 * *gc; j++){
-				for (int i = 1; i < *n + 2 * *gc; i++) {
-				derivative[i][j] = (A[i][j+1] - A[i][j-1])/2.0/ *dx;
+			for (int j = 1; j < *n + *gc; j++){
+				for (int i = 1; i < *n + *gc; i++) {
+				derivative[i][j] = (A[i+1][j] - A[i-1][j])/2.0/ *dx;
 				} 
 			}
 		} else if (order == 4) {
@@ -24,7 +26,7 @@ vector<vector<double>> DDx(vector<vector<double>> A, double* dx,int* gc,int* n,i
 		for (int j = 1; j < *n + 2 * *gc; j++){
 			for (int i = 1; i < *n + 2 * *gc; i++) {
 
-			derivative[i][j] = (-A[i][j+2] + 8*A[i][j+1] - 8*A[i][j-1] + A[i][j-2])/12.0/ *dx;
+			derivative[i][j] = (-A[i+2][j] + 8*A[i+1][j] - 8*A[i-1][j] + A[i-2][j])/12.0/ *dx;
 			}
 		} 
 			
@@ -32,7 +34,7 @@ vector<vector<double>> DDx(vector<vector<double>> A, double* dx,int* gc,int* n,i
 		for (int j = 1; j < *n + 2 * *gc; j++){
 			for (int i = 1; i < *n + 2 * *gc; i++) {
 
-			derivative[i][j] = (A[i][j+3]/60 - 3*A[i][j+2]/20 + 3*A[i][j+1]/4 - 3*A[i][j-1]/4 + 3*A[i][j-2]/20 - A[i][j-3]/60)/ *dx;
+			derivative[i][j] = (A[i+3][j]/60 - 3*A[i+2][j]/20 + 3*A[i+1][j]/4 - 3*A[i-1][j]/4 + 3*A[i-2][j]/20 - A[i-3][j]/60)/ *dx;
 			}
 		} 
 		}
@@ -47,9 +49,9 @@ vector<vector<double>> DDy(vector<vector<double>> A, double* dy,int* gc,int* n,i
     vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int i = 1; i < *n + 2 * *gc - 1; i++){
-				for (int j = 1; j < *n + 2 * *gc - 1; j++) {
-				derivative[i][j] = (A[i+1][j] - A[i-1][j])/2.0/ *dy;
+			for (int i = 1; i < *n + 2 * *gc; i++){
+				for (int j = 1; j < *n + 2 * *gc; j++) {
+				derivative[i][j] = (A[i][j+1] - A[i][j-1])/2.0/ *dy;
 				} 
 			}
 		} else if (order == 4) {
@@ -57,7 +59,7 @@ vector<vector<double>> DDy(vector<vector<double>> A, double* dy,int* gc,int* n,i
 		for (int i = 1; i < *n + 2 * *gc; i++){
 			for (int j = 1; j < *n + 2 * *gc; j++) {
 
-			derivative[i][j] = (-A[i+2][j] + 8*A[i+1][j] - 8*A[i-1][j] + A[i-2][j])/12.0/ *dy;
+			derivative[i][j] = (-A[i][j+2] + 8*A[i][j+1] - 8*A[i][j-1] + A[i][j-2])/12.0/ *dy;
 			}
 		} 
 			
@@ -65,7 +67,7 @@ vector<vector<double>> DDy(vector<vector<double>> A, double* dy,int* gc,int* n,i
 		for (int i = 1; i < *n + 2 * *gc; i++){
 			for (int j = 1; j < *n + 2 * *gc; j++) {
 
-			derivative[i][j] = (A[i+3][j]/60 - 3*A[i+2][j]/20 + 3*A[i+1][j]/4 - 3*A[i-1][j]/4 + 3*A[i-2][j]/20 - A[i-3][j]/60)/ *dy;
+			derivative[i][j] = (A[i][j+3]/60 - 3*A[i][j+2]/20 + 3*A[i][j+1]/4 - 3*A[i][j-1]/4 + 3*A[i][j-2]/20 - A[i][j-3]/60)/ *dy;
 			}
 		} 
 		}
@@ -83,7 +85,7 @@ vector<vector<double>> DDxDDx(vector<vector<double>> A, double* dx,int* gc,int* 
 			for (int j = 1; j < *n + 2 * *gc; j++) {
 				for (int i = 1; i < *n + 2 * *gc - 1; i++) {
 
-				derivative[i][j] = (A[i][j+1] -2*A[i][j] + A[i][j-1])/ *dx/ *dx;
+				derivative[i][j] = (A[i+1][j] -2*A[i][j] + A[i-1][j])/ *dx/ *dx;
 				
 				}
 			} 
@@ -91,7 +93,7 @@ vector<vector<double>> DDxDDx(vector<vector<double>> A, double* dx,int* gc,int* 
 			for (int j = 2; j < *n + 2 * *gc; j++) {
 				for (int i = 2; i < *n + 2 * *gc; i++) {
 				
-				derivative[i][j] = (-A[i+2][j+2]/12.0 + 4.0*A[i][j+1]/3.0 - 5.0*A[i][j]/2.0 + 4*A[i][j-1]/3 - A[i][j-2]/12.0)/ *dx/ *dx;
+				derivative[i][j] = (-A[i+2][j]/12.0 + 4.0*A[i+1][j]/3.0 - 5.0*A[i][j]/2.0 + 4*A[i-1][j]/3 - A[i-2][j]/12.0)/ *dx/ *dx;
 				
 				}
 			} 
@@ -100,7 +102,7 @@ vector<vector<double>> DDxDDx(vector<vector<double>> A, double* dx,int* gc,int* 
 			for (int j = *gc; j < *n + 2 * *gc; j++) {
 				for (int i = *gc; i < *n + 2 * *gc; i++) {
 
-				derivative[i][j] = (A[i][j+3]/90 - 3*A[i][j+2]/20 + 3*A[i][j+1]/2 - 49*A[i][j]/18 + 3*A[i][j-1]/2 - 3*A[i][j-2]/20 + A[i][j-3]/90)/ *dx/ *dx;
+				derivative[i][j] = (A[i+3][j]/90 - 3*A[i+2][j]/20 + 3*A[i+1][j]/2 - 49*A[i][j]/18 + 3*A[i-1][j]/2 - 3*A[i-2][j]/20 + A[i-3][j]/90)/ *dx/ *dx;
 
 				}
 			} 
@@ -114,10 +116,10 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
   	vector<vector<double>> derivative(*n + 2 * *gc,vector<double>(*n + 2 * *gc));
 
 		if (order == 2) {
-			for (int i = *gc; i < *n + 2 * *gc - 1; i++) {
+			for (int i = *gc; i < *n + 2 * *gc; i++) {
 				for (int j = *gc; j < *n + 2 * *gc; j++) {
 
-				derivative[i][j] = (A[i+1][j] -2*A[i][j] + A[i-1][j])/ *dy/ *dy;
+				derivative[i][j] = (A[i][j+1] -2*A[i][j] + A[i][j-1])/ *dy/ *dy;
 				
 				}
 			} 
@@ -125,7 +127,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 			for (int i = *gc; i < *n + 2 * *gc; i++) {
 				for (int j = *gc; j < *n + 2 * *gc; j++) {
 				
-				derivative[i][j] = (-A[i+2][j]/12.0 + 4.0*A[i+1][j]/3.0 - 5.0*A[i][j]/2.0 + 4*A[i-1][j]/3 - A[i-2][j]/12.0)/ *dy/ *dy;
+				derivative[i][j] = (-A[i][j+2]/12.0 + 4.0*A[i][j+1]/3.0 - 5.0*A[i][j]/2.0 + 4*A[i][j-1]/3 - A[i][j-2]/12.0)/ *dy/ *dy;
 				
 				}
 			} 
@@ -134,7 +136,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 			for (int i = *gc; i < *n + 2 * *gc; i++) {
 				for (int j = *gc; j < *n + 2 * *gc; j++) {
 
-				derivative[i][j] = (A[i+3][j]/90 - 3*A[i+2][j]/20 + 3*A[i+1][j]/2 - 49*A[i][j]/18 + 3*A[i-1][j]/2 - 3*A[i-2][j]/20 + A[i-3][j]/90)/ *dy/ *dy;
+				derivative[i][j] = (A[i][j+3]/90 - 3*A[i][j+2]/20 + 3*A[i][j+1]/2 - 49*A[i][j]/18 + 3*A[i][j-1]/2 - 3*A[i][j-2]/20 + A[i][j-3]/90)/ *dy/ *dy;
 
 				}
 			} 
@@ -145,7 +147,7 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 
 vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order) 
 {
-	double emax = 1e-4,epsilon_max = 1;
+	double emax = 1e-4,epsilon_max = 1,Lmax;
 	int iter;
 	vector<vector<double>> error(n + 2*gc,vector<double>(n + 2*gc));
     vector<vector<double>> L_new(n + 2*gc,vector<double>(n + 2*gc));
@@ -154,11 +156,6 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		int x,y;
 	};
     location lL;
-	double BC_L,BC_R,BC_T,BC_B;
-	BC_L = 1.0;
-	BC_R = 0.0;
-	BC_T = 0.0;
-	BC_B = 0.0;
 
 	
 	// for (int i = 0; i < n+gc; i++){
@@ -182,9 +179,22 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		}
 	}
 
+   	for(int i = 1; i < n + gc; i++){
+        for(int j = 1; j < n + gc; j++){
+			if(Lmax < L_new[i][j])
+            {
+				Lmax = L_new[i][j];
+                lL.x = i + 1;
+                lL.y = j + 1;
+            }
+		}
+	}
+
+
+
 	for (int i = gc; i < n + gc; i++){
 		for (int j = gc; j < n + gc; j++){
-			error[i][j] = abs(L_new[i][j] - L[i][j]);
+			error[i][j] = abs(L_new[i][j] - L[i][j])/Lmax;
 		}
 	}
 
@@ -201,8 +211,8 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 		}
 	}
 	//cout << epsilon_max << endl;
-    for (int j = 1; j < n + gc; j++) {
-		for (int i = 1; i < n + gc; i++) {
+    for (int j = 0; j < n + 2*gc; j++) {
+		for (int i = 0; i < n + 2*gc; i++) {
             L[i][j] = L_new[i][j];
 
 		}
@@ -373,12 +383,16 @@ void create(string file, vector<vector<double>> A,int n)
   
     int i,j;
 	// Read the input 
+    for (i = 1; i < n-1; ++i)
     for (i = 1; i < n - 1; ++i)
     {
+        for (j = 1; j < n -1; ++j)
+            if (j < (n - 2)) {
         for (j = 1; j < n - 1; ++j)
             if (j < (n - 2)) {
                 fout << A[i][j] << ",";
             }
+            else if (j == (n - 2)) {
             else if (j == (n - 2)) {
                 fout << A[i][j] << "\n";
             }
@@ -400,6 +414,7 @@ void createxy(string file, vector<double> x, vector<double> y,int n)
     int i;
   
     // Read the input 
+    for (i = 1; i < n-1; i++) { 
     for (i = 1; i < n-1; i++) { 
   
         fout << x[i] << ", "
@@ -447,6 +462,7 @@ int main(){
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
 	i_max = n*10;                   // Total Number of Iterations
+	i_max = n*10;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -461,7 +477,7 @@ int main(){
 	vector<vector<double>> d2Bxd2y(n + 2*gc,vector<double>(n + 2*gc)), d2Bxd2x(n + 2*gc,vector<double>(n + 2*gc)),d2Byd2x(n + 2*gc,vector<double>(n + 2*gc)), d2Byd2y(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> B_mag(n + 2*gc,vector<double>(n + 2*gc)),B_residual(n + 2*gc,vector<double>(n + 2*gc)),Phi(n + 2*gc,vector<double>(n + 2*gc)),dPhidy(n + 2*gc,vector<double>(n + 2*gc)), dPhidx(n + 2*gc,vector<double>(n + 2*gc)),Vorticity(n + 2*gc,vector<double>(n + 2*gc)),CurrentDensity(n + 2*gc,vector<double>(n + 2*gc));
 		// ***** Initial Conditions *****	
-		/***** Grid *****/
+		 /***** Grid *****/
 		for ( i = 0; i < n + 2*gc; i++) {
 			
 			for (j = 0; j < n + 2*gc; j++){
@@ -480,6 +496,12 @@ int main(){
 				// v[i][j] = 4*pow(2.7182818,-(((x[i] - 3.14159)*(x[i] - 3.14159)) + ((y[j] - 3.14159)*(y[j] - 3.14159)))/2/0.5/0.5)/(2*3.14159*0.5*0.5);
 				// u[i][j] = sin(x[i]*x[i]*0.125 + y[j]*y[j]*0.125)+1;
 				// v[i][j] = sin(x[i])*cos(y[j]);
+				u[i][j] = -sin(y[j]);
+				v[i][j] =  sin(x[i]);
+				Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[j]);
+				By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[i]);
+				// Bx[i][j] = 0.0;
+				// By[i][j] = 0.0;
 				u[i][j] = -sin(y[i]);
 				v[i][j] =  sin(x[j]);
 				Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[i]);
@@ -515,6 +537,8 @@ int main(){
 		std::filesystem::create_directory("B_mag");
 		std::filesystem::remove_all("Vorticity");
 		std::filesystem::create_directory("Vorticity");
+		std::filesystem::remove_all("B");
+		std::filesystem::create_directory("B");
 		std::filesystem::remove_all("CurrentDensity");
 		std::filesystem::create_directory("CurrentDensity");
 		std::filesystem::remove_all("Bresidual");
@@ -539,11 +563,12 @@ int main(){
 		
 		if(type == "MHD"){
 
-					P = fill_gc(P,gc,n);
+					
 					dt =  find_dt(u,v,dx,cfl,nu);
 					cout << dt << endl;
 					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
 					P = Poisson(P,B,dx,dy,gc,n,order);
+					P = fill_gc(P,gc,n);
 					dp_dx = DDx(P,&dx,&gc,&n,order);
 					dp_dy = DDy(P,&dy,&gc,&n,order);
 					dBxdx = DDx(Bx,&dx,&gc,&n,order);
@@ -585,6 +610,20 @@ int main(){
 						
 						}
 					}
+					Bx = fill_gc(Bx,gc,n);
+					By = fill_gc(By,gc,n);
+					B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
+					Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order);
+					dPhidx = DDx(Phi,&dx,&gc,&n,order);
+					dPhidy = DDy(Phi,&dy,&gc,&n,order);
+					
+					
+					for ( j = 0; j < n + 2*gc; j++){
+						for ( i = 0; i < n + 2*gc; i++){
+							Bx[i][j] = Bx[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
+							By[i][j] = By[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
+						}
+					}
 					// Bx = fill_gc(Bx,gc,n);
 					// By = fill_gc(By,gc,n);
 					// B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
@@ -602,6 +641,13 @@ int main(){
 
 				}	
 
+				for ( j = 0; j < n + 2*gc; j++){
+					for ( i = 0; i < n + 2*gc; i++){
+						Vorticity[i][j] = (dvdx[i][j] - dudy[i][j]);
+						V_mag[i][j] = sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
+						B_mag[i][j] = sqrt(Bx[i][j]*Bx[i][j] + By[i][j]*By[i][j]);
+						}
+					}
 				V_mag = getMagnitude(u,v);
 				B_mag = getMagnitude(Bx,By);
 				Vorticity = getCurl2D(u,v,&dx,&dy,&gc,&n,order);
@@ -653,6 +699,13 @@ int main(){
 						filename.append("s.csv");
 						create(filename,P,n + 2*gc);
 						std::filesystem::current_path("..");
+
+						std::filesystem::current_path("B");
+						filename = "TimeB_";
+						filename.append(s);
+						filename.append("s.csv");
+						create(filename,B,n + 2*gc);
+						std::filesystem::current_path("..");
 						
 						std::filesystem::current_path("Bxcomponent");
 						filename = "TimeBx_";
@@ -699,6 +752,8 @@ int main(){
 						k = k+1;
 						time = time + snapshot_time;
 					}
+		
+			
 
 		
 		}

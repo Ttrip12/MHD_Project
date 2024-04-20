@@ -11,9 +11,11 @@ for i = 3:num_files
    data{i-2} = readmatrix(file);
 end
 cd ..
-FilesU = dir('Bxcomponent');
+%FilesU = dir('Bxcomponent');
+FilesU = dir('DataU');
 num_files = length(FilesU);
-cd Bxcomponent\
+%cd Bxcomponent\
+cd DataU\
 dataU{:} = zeros(num_files-2);
 for i = 3:num_files
    fileU = FilesU(i).name;
@@ -21,8 +23,10 @@ for i = 3:num_files
 end
 %num_files = length(FilesU);
 cd ..
-FilesV = dir('Bycomponent');
-cd Bycomponent\
+%FilesV = dir('Bycomponent');
+FilesV = dir('DataV');
+cd DataV\
+%cd Bycomponent\
 dataV{:} = zeros(num_files-2);
 
 for i = 3:num_files
@@ -50,8 +54,18 @@ for i = 3:num_files
 end
 cd ..
 
+FilesPressure = dir('Pressure');
+cd Pressure\
+dataPressure{:} = zeros(num_files-2);
+
+for i = 3:num_files
+   filePressure = FilesPressure(i).name;
+   dataPressure{i-2} = readmatrix(filePressure);
+end
+cd ..
+
 %% Video
-v = VideoWriter('Vorticity with B lines.mp4', 'MPEG-4');
+v = VideoWriter('Vorticity Resistive with pressure', 'MPEG-4');
 v.FrameRate = 30;  % arbitrary
 open(v)
 sc = 8;
@@ -61,7 +75,8 @@ for i=1:num_files - 2
     s = pcolor(axes(:,1),axes(:,2),dataVort{i});
     s.EdgeColor = 'none';
     c = colorbar;
-    c.Label.String = 'Vorticity';
+    caxis([0 1.5]);
+    c.Label.String = 'B-Field Intensity';
     hold on
     [C,h] = contour(axes(:,1),axes(:,2),dataVort{i},30);
     h.EdgeColor = 'k';
