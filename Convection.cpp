@@ -386,21 +386,18 @@ void create(string file, vector<vector<double>> A,int n)
     for (i = 1; i < n-1; ++i)
     for (i = 1; i < n - 1; ++i)
     {
-        for (j = 1; j < n -1; ++j)
-            if (j < (n - 2)) {
         for (j = 1; j < n - 1; ++j)
             if (j < (n - 2)) {
                 fout << A[i][j] << ",";
             }
-            else if (j == (n - 2)) {
             else if (j == (n - 2)) {
                 fout << A[i][j] << "\n";
             }
     }
 }
 
-void createxy(string file, vector<double> x, vector<double> y,int n) 
-{ 
+void createxy(string file, vector<double> x, vector<double> y,int n){
+	
 
 	
     // file pointer 
@@ -414,7 +411,6 @@ void createxy(string file, vector<double> x, vector<double> y,int n)
     int i;
   
     // Read the input 
-    for (i = 1; i < n-1; i++) { 
     for (i = 1; i < n-1; i++) { 
   
         fout << x[i] << ", "
@@ -498,16 +494,9 @@ int main(){
 				// v[i][j] = sin(x[i])*cos(y[j]);
 				u[i][j] = -sin(y[j]);
 				v[i][j] =  sin(x[i]);
-				Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[j]);
-				By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[i]);
-				// Bx[i][j] = 0.0;
-				// By[i][j] = 0.0;
-				u[i][j] = -sin(y[i]);
-				v[i][j] =  sin(x[j]);
-				Bx[i][j] = -(1/sqrt(4*M_PI))*sin(y[i]);
-				By[i][j] = (1/sqrt(4*M_PI))*sin(2*x[j]);
-				// Bx[i][j] = 0.0;
-				// By[i][j] = 0.0;
+				Bx[i][j] = -sin(y[j]);
+				By[i][j] = sin(2*x[i]);
+
 				
 			}
 		} 
@@ -565,7 +554,6 @@ int main(){
 
 					
 					dt =  find_dt(u,v,dx,cfl,nu);
-					cout << dt << endl;
 					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
 					P = Poisson(P,B,dx,dy,gc,n,order);
 					P = fill_gc(P,gc,n);
@@ -614,47 +602,28 @@ int main(){
 					By = fill_gc(By,gc,n);
 					B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
 					Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order);
+					Phi = fill_gc(Phi,gc,n);
 					dPhidx = DDx(Phi,&dx,&gc,&n,order);
 					dPhidy = DDy(Phi,&dy,&gc,&n,order);
 					
 					
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
-							Bx[i][j] = Bx[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
-							By[i][j] = By[i][j] -  (dPhidx[i][j] + dPhidy[i][j]);
+							Bx[i][j] = Bx[i][j] -  (dPhidx[i][j]);
+							By[i][j] = By[i][j] -  (dPhidy[i][j]);
 						}
 					}
-					// Bx = fill_gc(Bx,gc,n);
-					// By = fill_gc(By,gc,n);
-					// B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
-					// Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order);
-					// dPhidx = DDx(Phi,&dx,&gc,&n,order);
-					// dPhidy = DDy(Phi,&dy,&gc,&n,order);
-					// for ( j = 0; j < n + 2*gc; j++){
-					// 	for ( i = 0; i < n + 2*gc; i++){
-					// 		Bx[i][j] = Bx[i][j] -  (dPhidx[i][j]);
-					// 		By[i][j] = By[i][j] -  (dPhidy[i][j]);
-					// 	}
-					// }
+
 					Bx = fill_gc(Bx,gc,n);
 					By = fill_gc(By,gc,n);
 
 				}	
 
-				for ( j = 0; j < n + 2*gc; j++){
-					for ( i = 0; i < n + 2*gc; i++){
-						Vorticity[i][j] = (dvdx[i][j] - dudy[i][j]);
-						V_mag[i][j] = sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
-						B_mag[i][j] = sqrt(Bx[i][j]*Bx[i][j] + By[i][j]*By[i][j]);
-						}
-					}
+
 				V_mag = getMagnitude(u,v);
 				B_mag = getMagnitude(Bx,By);
 				Vorticity = getCurl2D(u,v,&dx,&dy,&gc,&n,order);
 				CurrentDensity = getCurl2D(Bx,By,&dx,&dy,&gc,&n,order);
-
-					Vorticity = fill_gc(Vorticity,gc,n);
-					Vorticity = fill_corners(Vorticity,gc,n);
 					time_check = time_check + dt;
 					if (time_check >= time){
 						cout << time_check << endl;
@@ -753,8 +722,6 @@ int main(){
 						time = time + snapshot_time;
 					}
 		
-			
-
 		
 		}
 
