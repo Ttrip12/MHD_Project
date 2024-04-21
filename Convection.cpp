@@ -157,22 +157,8 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 	};
     location lL;
 
-	
-	// for (int i = 0; i < n+gc; i++){
-	// L[i][0]    = 2.0*BC_L;// - L[i][1];
-	// L[i][n+gc] = 2.0*BC_R; //- L[i][n];
-	// L[0][i]    = dy * BC_B + L[1][i];
-	// L[n+gc][i] = dy * BC_T + L[n][i];
-	// }
   while (emax < epsilon_max){
 	
-	// for (int i = 0; i < n + gc; i++){
-	// L[i][0]    =  -L[i][1];
-	// L[i][n+gc] =  -L[i][n];
-	// L[0][i]    =  -L[1][i];
-	// L[n+gc][i] =  -L[n][i];
-	// }
-
 	for (int i = 1; i < n+gc; i++) {
 		for (int j = 1; j < n+gc; j++) {
 			L_new[i][j] = (dy*dy*(L[i+1][j] + L[i-1][j]) + dx*dx*(L[i][j+1] + L[i][j-1]) - B[i][j]*dx*dx*dy*dy)/(2*dx*dx + 2*dy*dy);
@@ -194,7 +180,7 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
 
 	for (int i = gc; i < n + gc; i++){
 		for (int j = gc; j < n + gc; j++){
-			error[i][j] = abs(L_new[i][j] - L[i][j])/Lmax;
+			error[i][j] = abs(L_new[i][j] - L[i][j]);
 		}
 	}
 
@@ -210,7 +196,6 @@ vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B
             }
 		}
 	}
-	//cout << epsilon_max << endl;
     for (int j = 0; j < n + 2*gc; j++) {
 		for (int i = 0; i < n + 2*gc; i++) {
             L[i][j] = L_new[i][j];
@@ -291,6 +276,28 @@ vector<vector<double>> fill_corners(vector<vector<double>> A, int gc,int n){
 			A[0][n + gc] = 0.5*(A[1][n + gc] + A[0][n]);
 			A[n + gc][0] = 0.5*(A[n + gc][1] + A[n][0]);
 	return A;
+}
+
+double getAvg(vector<vector<double>> A,double dx, double dy,double nu){
+	double AVG;
+	for (int j = 1; j <  A.size() - 1; j++) {
+		for (int i = 1; i < A.size() - 1; i++) {	
+			AVG += A[i][j]*A[i][j]*dx*dy;
+		}
+	}
+
+	return (nu/4/M_PI/M_PI)*AVG;
+}
+
+double getNrg(vector<vector<double>> A,double dx, double dy){
+	double AVG;
+	for (int j = 1; j <  A.size() - 1; j++) {
+		for (int i = 1; i < A.size() - 1; i++) {	
+			AVG += A[i][j]*A[i][j]*dx*dy;
+		}
+	}
+
+	return (0.5)*AVG;
 }
 
 double find_dt(vector<vector<double>> u,vector<vector<double>> v,double dx,double cfl,double nu) {
@@ -457,8 +464,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*10;                   // Total Number of Iterations
-	i_max = n*10;                   // Total Number of Iterations
+	i_max = n*0.7;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
@@ -467,7 +473,7 @@ int main(){
 	vector<vector<double>> u(n + 2*gc,vector<double>(n + 2*gc)), unew(n + 2*gc,vector<double>(n + 2*gc)), dudx(n + 2*gc,vector<double>(n + 2*gc)), d2u_d2x(n + 2*gc,vector<double>(n + 2*gc)), dudy(n + 2*gc,vector<double>(n + 2*gc)), d2u_d2y(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> v(n + 2*gc,vector<double>(n + 2*gc)), vnew(n + 2*gc,vector<double>(n + 2*gc)), dvdx(n + 2*gc,vector<double>(n + 2*gc)), d2v_d2x(n + 2*gc,vector<double>(n + 2*gc)), dvdy(n + 2*gc,vector<double>(n + 2*gc)), d2v_d2y(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> B(n + 2*gc,vector<double>(n + 2*gc)), P(n + 2*gc,vector<double>(n + 2*gc)), dp_dx(n + 2*gc,vector<double>(n + 2*gc)), dp_dy(n + 2*gc,vector<double>(n + 2*gc));
-	vector<double> x(n + 2*gc),y(n + 2*gc);
+	vector<double> x(n + 2*gc),y(n + 2*gc),ViscEnergyDissipation(i_max),MagneticEnergyDissipation(i_max),t(i_max),ME(i_max),KE(i_max);
 	vector<vector<double>> Bx(n + 2*gc,vector<double>(n + 2*gc)), Bxnew(n + 2*gc,vector<double>(n + 2*gc)),By(n + 2*gc,vector<double>(n + 2*gc)), Bynew(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> dBxdy(n + 2*gc,vector<double>(n + 2*gc)), dBxdx(n + 2*gc,vector<double>(n + 2*gc)),dBydx(n + 2*gc,vector<double>(n + 2*gc)), dBydy(n + 2*gc,vector<double>(n + 2*gc));
 	vector<vector<double>> d2Bxd2y(n + 2*gc,vector<double>(n + 2*gc)), d2Bxd2x(n + 2*gc,vector<double>(n + 2*gc)),d2Byd2x(n + 2*gc,vector<double>(n + 2*gc)), d2Byd2y(n + 2*gc,vector<double>(n + 2*gc));
@@ -536,7 +542,7 @@ int main(){
 
 	// Solve
 		k = 0;
-		double snapshot_time = 0.1;
+		double snapshot_time = 0.05;
 		//int num = i_max/1000;
 		vector<vector<double>> V_mag(n + 2*gc,vector<double>(n + 2*gc));
 		for (int iter = 0; iter < i_max; iter++){
@@ -567,6 +573,8 @@ int main(){
 					d2Byd2x = DDxDDx(By,&dx,&gc,&n,order);
 					d2Bxd2y = DDyDDy(Bx,&dy,&gc,&n,order);
 					d2Byd2y = DDyDDy(By,&dy,&gc,&n,order);
+					
+
 
 					for ( j = 0; j < n + 2*gc; j++){
 						for ( i = 0; i < n + 2*gc; i++){
@@ -619,15 +627,55 @@ int main(){
 
 				}	
 
+		if(type == "NS"){
+
+		
+		dt =  find_dt(u,v,dx,cfl,nu);
+		B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
+		P = Poisson(P,B,dx,dy,gc,n,order,1e-4);
+		P = fill_gc(P,gc,n);
+		dp_dx = DDx(P,&dx,&gc,&n,order);
+		dp_dy = DDy(P,&dy,&gc,&n,order);
+
+
+		for ( j = 0; j < n + 2*gc; j++){
+			for ( i = 0; i < n + 2*gc; i++){
+
+			unew[i][j] = u[i][j] + dt*(-u[i][j]*dudx[i][j] - v[i][j]*dudy[i][j] + nu*(d2u_d2x[i][j] + d2u_d2y[i][j]) - dp_dx[i][j]/rho);
+
+			vnew[i][j] = v[i][j] + dt*(-u[i][j]*dvdx[i][j] - v[i][j]*dvdy[i][j] + nu*(d2v_d2x[i][j] + d2v_d2y[i][j])  - dp_dy[i][j]/rho);
+
+			u[i][j] = unew[i][j];
+
+			v[i][j] = vnew[i][j];
+			
+			}
+		}
+		
+		u = fill_gc(u,gc,n);
+		v = fill_gc(v,gc,n);
+		
+
+
+	}	
+
+
+
 
 				V_mag = getMagnitude(u,v);
 				B_mag = getMagnitude(Bx,By);
 				Vorticity = getCurl2D(u,v,&dx,&dy,&gc,&n,order);
 				CurrentDensity = getCurl2D(Bx,By,&dx,&dy,&gc,&n,order);
+				ViscEnergyDissipation[iter] = getAvg(Vorticity,dx,dy,nu);
+				MagneticEnergyDissipation[iter] = getAvg(CurrentDensity,dx,dy,eta);
+				KE[iter] = getNrg(V_mag,dx,dy);
+				ME[iter] = getNrg(B_mag,dx,dy);
+
 					time_check = time_check + dt;
+					t[iter] = time_check;
 					if (time_check >= time){
 						cout << time_check << endl;
-						string s = to_string(time/0.1);
+						string s = to_string(time/snapshot_time);
 						s.erase(s.find_last_not_of('0') + 1, s.length()-1);
    						s.erase(s.find_last_not_of('.') + 1, s.length()-1);
 						if (k < 10) {
@@ -726,6 +774,14 @@ int main(){
 		
 		}
 
+		std::filesystem::remove("KineticEnergyDissipation.csv");
+		std::filesystem::remove("MagneticEnergyDissipation.csv");
+		std::filesystem::remove("Kinetic_Energy.csv");
+		std::filesystem::remove("Magnetic_Energy.csv");
+		createxy("KineticEnergyDissipation.csv",ViscEnergyDissipation,t,t.size());
+		createxy("MagneticEnergyDissipation.csv",MagneticEnergyDissipation,t,t.size());
+		createxy("Kinetic_Energy.csv",KE,t,t.size());
+		createxy("Magnetic_Energy.csv",ME,t,t.size());
 		std::filesystem::current_path("..");
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 		double time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
