@@ -145,9 +145,9 @@ vector<vector<double>> DDyDDy(vector<vector<double>> A, double* dy,int* gc,int* 
 	return derivative;
 }
 
-vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order) 
+vector<vector<double>> Poisson(vector<vector<double>> L,vector<vector<double>> B,double dx,double dy,int gc, int n, int order, double emax) 
 {
-	double emax = 1e-4,epsilon_max = 1,Lmax;
+	double epsilon_max = 1,Lmax;
 	int iter;
 	vector<vector<double>> error(n + 2*gc,vector<double>(n + 2*gc));
     vector<vector<double>> L_new(n + 2*gc,vector<double>(n + 2*gc));
@@ -555,7 +555,7 @@ int main(){
 					
 					dt =  find_dt(u,v,dx,cfl,nu);
 					B = PressureResidual(u,v,rho,dx,dy,gc,n,order);
-					P = Poisson(P,B,dx,dy,gc,n,order);
+					P = Poisson(P,B,dx,dy,gc,n,order,1e-4);
 					P = fill_gc(P,gc,n);
 					dp_dx = DDx(P,&dx,&gc,&n,order);
 					dp_dy = DDy(P,&dy,&gc,&n,order);
@@ -601,7 +601,7 @@ int main(){
 					Bx = fill_gc(Bx,gc,n);
 					By = fill_gc(By,gc,n);
 					B_residual = MagneticResidual(Bx,By,dx,dy,gc,n,order);
-					Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order);
+					Phi = Poisson(Phi,B_residual,dx,dy,gc,n,order,1e-4);
 					Phi = fill_gc(Phi,gc,n);
 					dPhidx = DDx(Phi,&dx,&gc,&n,order);
 					dPhidy = DDy(Phi,&dy,&gc,&n,order);
@@ -720,6 +720,7 @@ int main(){
 
 						k = k+1;
 						time = time + snapshot_time;
+						cout << iter << endl;
 					}
 		
 		
