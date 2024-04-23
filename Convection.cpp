@@ -464,7 +464,7 @@ int main(){
 
 	gc = order/2;		            // Find Number of GC
 	dt = 1.0/n*cfl;                 // Timestep
-	i_max = n*0.7;                   // Total Number of Iterations
+	i_max = n;                   // Total Number of Iterations
 	int num = 100;
 	// ***** Define Mesh *****
 	dx = (x_high - x_low)/nx;
